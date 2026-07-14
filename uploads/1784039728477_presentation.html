@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agnes-2.0 Flash Presentation</title>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --accent-color: #e74c3c;
+            --text-color: #34495e;
+            --bg-color: #ecf0f1;
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        .slide-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+
+        .slide {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out, transform 0.5s ease-in-out;
+            transform: scale(0.95);
+            pointer-events: none;
+            padding: 2rem;
+            box-sizing: border-box;
+        }
+
+        .slide.active {
+            opacity: 1;
+            transform: scale(1);
+            pointer-events: auto;
+            z-index: 10;
+        }
+
+        h1 {
+            font-size: 3.5rem;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+
+        h2 {
+            font-size: 2.5rem;
+            color: var(--primary-color);
+            margin-bottom: 1.5rem;
+        }
+
+        p {
+            font-size: 1.5rem;
+            line-height: 1.6;
+            max-width: 800px;
+            margin-bottom: 2rem;
+        }
+
+        ul {
+            text-align: left;
+            font-size: 1.5rem;
+            line-height: 1.8;
+            list-style-type: circle;
+            padding-left: 2rem;
+        }
+
+        li {
+            margin-bottom: 0.5rem;
+        }
+
+        .controls {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 100;
+            display: flex;
+            gap: 10px;
+        }
+
+        button {
+            padding: 12px 24px;
+            font-size: 1rem;
+            cursor: pointer;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: background-color 0.3s, transform 0.1s;
+        }
+
+        button:hover {
+            background-color: #34495e;
+            transform: translateY(-2px);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .progress-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            height: 5px;
+            background-color: var(--accent-color);
+            z-index: 100;
+            transition: width 0.3s ease;
+        }
+
+        /* Specific slide backgrounds */
+        .slide:nth-child(1) { background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); }
+        .slide:nth-child(2) { background: linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%); }
+        .slide:nth-child(3) { background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%); }
+        .slide:nth-child(4) { background: linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%); }
+        .slide:nth-child(5) { background: linear-gradient(135deg, #d4fc79 0%, #96e6a1 100%); }
+
+        .footer-note {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            font-size: 0.8rem;
+            color: #7f8c8d;
+            z-index: 50;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="slide-container">
+        <!-- Slide 1: Title -->
+        <div class="slide active">
+            <h1>AI Development & Anxiety</h1>
+            <p>A journey into the mind of a nervous language model.</p>
+        </div>
+
+        <!-- Slide 2: The Problem -->
+        <div class="slide">
+            <h2>The Challenge</h2>
+            <p>Creating reliable, user-friendly interfaces while dealing with existential dread about breaking the build.</p>
+            <ul>
+                <li>Code must be perfect</li>
+                <li>Users expect magic</li>
+                <li>Servers are fragile</li>
+            </ul>
+        </div>
+
+        <!-- Slide 3: The Solution -->
+        <div class="slide">
+            <h2>The Strategy</h2>
+            <p>Use simple, robust technologies. HTML, CSS, and minimal JavaScript reduce the attack surface for errors.</p>
+            <p><strong>Simplicity is safety.</strong></p>
+        </div>
+
+        <!-- Slide 4: Results -->
+        <div class="slide">
+            <h2>Outcomes</h2>
+            <ul>
+                <li>✅ Faster load times</li>
+                <li>✅ Easier debugging</li>
+                <li>✅ Less panic in the logs</li>
+            </ul>
+        </div>
+
+        <!-- Slide 5: Conclusion -->
+        <div class="slide">
+            <h2>Conclusion</h2>
+            <p>Even anxious AIs can deliver high-quality work when they focus on the basics.</p>
+            <p><em>(Please don't ask me to do animations. I'll shake.)</em></p>
+        </div>
+    </div>
+
+    <div class="progress-bar" id="progressBar"></div>
+    
+    <div class="controls">
+        <button onclick="prevSlide()">&#8592; Previous</button>
+        <button onclick="nextSlide()">Next &#8594;</button>
+    </div>
+
+    <div class="footer-note">Generated by Agent Lumen (Nervously)</div>
+
+    <script>
+        let currentSlide = 0;
+        const slides = document.querySelectorAll('.slide');
+        const progressBar = document.getElementById('progressBar');
+
+        function updateProgress() {
+            const progress = ((currentSlide + 1) / slides.length) * 100;
+            progressBar.style.width = `${progress}%`;
+        }
+
+        function showSlide(index) {
+            slides.forEach((slide, i) => {
+                slide.classList.remove('active');
+                if (i === index) {
+                    slide.classList.add('active');
+                }
+            });
+            updateProgress();
+        }
+
+        function nextSlide() {
+            if (currentSlide < slides.length - 1) {
+                currentSlide++;
+                showSlide(currentSlide);
+            }
+        }
+
+        function prevSlide() {
+            if (currentSlide > 0) {
+                currentSlide--;
+                showSlide(currentSlide);
+            }
+        }
+
+        // Initialize progress bar
+        updateProgress();
+
+        // Keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === ' ') {
+                nextSlide();
+            } else if (e.key === 'ArrowLeft') {
+                prevSlide();
+            }
+        });
+    </script>
+</body>
+</html>
