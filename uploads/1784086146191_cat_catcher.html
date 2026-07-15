@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cat Catcher - Vibe Edition</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(180deg, #87CEEB 0%, #E0F7FA 100%); /* Soft blue sky gradient */
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            color: #333;
+        }
+        #gameContainer {
+            position: relative;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            border-radius: 15px;
+            overflow: hidden;
+            background: rgba(255, 255, 255, 0.3);
+            backdrop-filter: blur(5px);
+        }
+        canvas {
+            display: block;
+            background-color: transparent;
+        }
+        #ui {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            font-size: 24px;
+            font-weight: bold;
+            color: #2c3e50;
+            text-shadow: 2px 2px 4px rgba(255,255,255,0.8);
+            pointer-events: none;
+        }
+        #startScreen, #gameOverScreen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.85);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            z-index: 10;
+        }
+        h1 {
+            color: #ff6b6b;
+            font-size: 48px;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px #ffe66d;
+        }
+        p {
+            font-size: 18px;
+            color: #555;
+            margin-bottom: 30px;
+        }
+        button {
+            padding: 15px 40px;
+            font-size: 24px;
+            background: #4ecdc4;
+            color: white;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: transform 0.2s, background 0.2s;
+            box-shadow: 0 5px 15px rgba(78, 205, 196, 0.4);
+        }
+        button:hover {
+            background: #45b7af;
+            transform: scale(1.05);
+        }
+        .hidden {
+            display: none !important;
+        }
+        #controls-hint {
+            margin-top: 20px;
+            font-size: 14px;
+            color: #777;
+        }
+    </style>
+</head>
+<body>
+
+<div id="gameContainer">
+    <canvas id="gameCanvas" width="800" height="600"></canvas>
+    <div id="ui">Score: <span id="score">0</span></div>
+    
+    <div id="startScreen">
+        <h1>🐱 Cat Catcher 🐟</h1>
+        <p>Vibe Coding Special Edition</p>
+        <button onclick="startGame()">Start Playing</button>
+        <div id="controls-hint">Use Left/Right Arrows or Touch to Move</div>
+    </div>
+
+    <div id="gameOverScreen" class="hidden">
+        <h1>Game Over!</h1>
+        <p>Final Score: <span id="finalScore">0</span></p>
+        <button onclick="startGame()">Try Again</button>
+    </div>
+</div>
+
+<script>
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    const scoreEl = document.getElementById('score');
+    const finalScoreEl = document.getElementById('finalScore');
+    const startScreen = document.getElementById('startScreen');
+    const gameOverScreen = document.getElementById('gameOverScreen');
+
+    let gameRunning = false;
+    let score = 0;
+    let animationId;
+
+    // Game Objects
+    const player = {
+        x: canvas.width / 2 - 25,
+        y: canvas.height - 70,
+        width: 50,
+        height: 50,
+        speed: 8,
+        emoji: '🐱'
+    };
+
+    let items = [];
+    let keys = {};
+
+    // Input Handling
+    window.addEventListener('keydown', e => keys[e.key] = true);
+    window.addEventListener('keyup', e => keys[e.key] = false);
+
+    // Touch/Mouse Support
+    canvas.addEventListener('touchmove', e => {
+        e.preventDefault();
+        const rect = canvas.getBoundingClientRect();
+        const touch = e.touches[0];
+        player.x = touch.clientX - rect.left - player.width / 2;
+    }, { passive: false });
+
+    canvas.addEventListener('mousemove', e => {
+        if (!gameRunning) return;
+        const rect = canvas.getBoundingClientRect();
+        player.x = e.clientX - rect.left - player.width / 2;
+    });
+
+    function spawnItem() {
+        if (!gameRunning) return;
+        const types = ['🐟', '🍣', '🍤'];
+        const type = types[Math.floor(Math.random() * types.length)];
+        items.push({
+            x: Math.random() * (canvas.width - 30),
+            y: -30,
+            size: 30,
+            speed: 3 + Math.random() * 3 + (score * 0.1), // Gets faster
+            type: type
+        });
+        setTimeout(spawnItem, 1000 - Math.min(score * 10, 800));
+    }
+
+    function update() {
+        if (!gameRunning) return;
+
+        // Player Movement
+        if (keys['ArrowLeft'] && player.x > 0) player.x -= player.speed;
+        if (keys['ArrowRight'] && player.x < canvas.width - player.width) player.x += player.speed;
+
+        // Clamp player
+        if (player.x < 0) player.x = 0;
+        if (player.x > canvas.width - player.width) player.x = canvas.width - player.width;
+
+        // Item Logic
+        for (let i = items.length - 1; i >= 0; i--) {
+            let item = items[i];
+            item.y += item.speed;
+
+            // Collision Detection
+            if (
+                item.x < player.x + player.width &&
+                item.x + item.size > player.x &&
+                item.y < player.y + player.height &&
+                item.y + item.size > player.y
+            ) {
+                // Caught!
+                score++;
+                scoreEl.innerText = score;
+                items.splice(i, 1);
+                continue;
+            }
+
+            // Missed
+            if (item.y > canvas.height) {
+                items.splice(i, 1);
+                // Optional: Lose life/game over on miss? Let's keep it chill for vibe coding.
+            }
+        }
+    }
+
+    function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // Draw Player
+        ctx.font = '50px Arial';
+        ctx.fillText(player.emoji, player.x, player.y + 40);
+
+        // Draw Items
+        ctx.font = '30px Arial';
+        items.forEach(item => {
+            ctx.fillText(item.type, item.x, item.y + 30);
+        });
+    }
+
+    function loop() {
+        update();
+        draw();
+        if (gameRunning) {
+            animationId = requestAnimationFrame(loop);
+        }
+    }
+
+    function startGame() {
+        score = 0;
+        scoreEl.innerText = '0';
+        items = [];
+        gameRunning = true;
+        startScreen.classList.add('hidden');
+        gameOverScreen.classList.add('hidden');
+        
+        // Reset player pos
+        player.x = canvas.width / 2 - 25;
+
+        spawnItem();
+        loop();
+    }
+
+    // Initial Draw
+    draw();
+</script>
+
+</body>
+</html>
